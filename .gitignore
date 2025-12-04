@@ -1,0 +1,24 @@
+# Chrome Extension
+*.crx
+*.pem
+.DS_Store
+
+# Node modules (if you add any)
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# Logs
+*.log
+
+# Build artifacts
+*.zip
+dist/
+build/
+
+# Environment files
+.env
+.env.local

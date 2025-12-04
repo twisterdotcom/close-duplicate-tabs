@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Close Duplicate Tabs (Including Anchors)</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Close Duplicate Tabs</h1>
+    
+    <div class="settings">
+      <div class="setting-item">
+        <label class="switch">
+          <input type="checkbox" id="ignoreQuery" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="label-text">Ignore query parameters</span>
+      </div>
+      
+      <div class="setting-item">
+        <label class="switch">
+          <input type="checkbox" id="ignoreHash" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="label-text">Ignore hash when comparing (but keep highest anchor)</span>
+      </div>
+      
+      <div class="setting-item">
+        <label class="switch">
+          <input type="checkbox" id="reloadTabs">
+          <span class="slider"></span>
+        </label>
+        <span class="label-text">Reload remaining tabs</span>
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <button id="closeDuplicatesBtn" class="btn btn-primary">Close Duplicates</button>
+      <button id="reloadAllBtn" class="btn btn-secondary">Reload All Tabs</button>
+    </div>
+    
+    <div id="status" class="status"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Close Duplicate Tabs (Including Anchors) - Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Close Duplicate Tabs</h1>
+      <p class="subtitle">Settings & Configuration</p>
+    </header>
+    
+    <div class="content">
+      <section class="settings-section">
+        <h2>Duplicate Detection Settings</h2>
+        <p class="section-description">Configure how the extension identifies duplicate tabs.</p>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label">Ignore query parameters</label>
+            <p class="setting-description">
+              When enabled, URLs with different query strings are treated as duplicates.
+              <br><strong>Example:</strong> <code>example.com/?a=1</code> and <code>example.com/?b=2</code> are considered duplicates.
+            </p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="ignoreQuery">
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label">Ignore hash when comparing</label>
+            <p class="setting-description">
+              When enabled, URLs are compared without their hash/anchor, but the hash is still used to determine which tab to keep (highest anchor number).
+              <br><strong>Example:</strong> <code>example.com/#comment-123</code> and <code>example.com/#comment-456</code> are duplicates, but the one with #comment-456 is kept.
+            </p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="ignoreHash">
+            <span class="slider"></span>
+          </label>
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label">Reload remaining tabs</label>
+            <p class="setting-description">
+              When enabled, remaining tabs will be automatically reloaded after closing duplicates.
+            </p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="reloadTabs">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+      
+      <section class="actions-section">
+        <h2>Actions</h2>
+        <div class="actions">
+          <button id="testBtn" class="btn btn-secondary">Test Duplicate Detection</button>
+          <button id="reloadAllBtn" class="btn btn-secondary">Reload All Tabs</button>
+        </div>
+        <div id="actionStatus" class="status"></div>
+      </section>
+      
+      <section class="info-section">
+        <h2>How to Use</h2>
+        <div class="info-content">
+          <p><strong>Click the extension icon</strong> in your Chrome toolbar to instantly close duplicate tabs.</p>
+          <p>The extension will:</p>
+          <ul>
+            <li>Detect duplicate tabs based on your settings</li>
+            <li>Keep the tab with the highest anchor number (e.g., latest GitHub comment)</li>
+            <li>Close all other duplicates</li>
+          </ul>
+          <p>The extension icon badge shows how many duplicate tabs are currently open.</p>
+        </div>
+      </section>
+    </div>
+    
+    <footer>
+      <p>Settings are automatically saved.</p>
+    </footer>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
+
