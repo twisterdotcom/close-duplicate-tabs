@@ -171,3 +171,54 @@ input:focus + .slider {
   background: #d1ecf1;
   color: #0c5460;
 }
+
+.divider {
+  height: 1px;
+  background: #e9ecef;
+  margin: 20px 0;
+}
+
+.ai-section {
+  margin-top: 20px;
+}
+
+.ai-section h2 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.custom-instructions {
+  margin: 15px 0;
+}
+
+.instructions-label {
+  display: block;
+  font-size: 12px;
+  color: #495057;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.custom-instructions textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 50px;
+  color: #333;
+}
+
+.custom-instructions textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.custom-instructions textarea::placeholder {
+  color: #adb5bd;
+}

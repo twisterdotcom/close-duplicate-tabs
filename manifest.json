@@ -5,7 +5,12 @@
   "description": "Close duplicate tabs, including those with different anchors. Keeps the tab with the highest anchor number.",
   "permissions": [
     "tabs",
-    "storage"
+    "storage",
+    "tabGroups"
+  ],
+  "host_permissions": [
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*"
   ],
   "action": {
     "default_icon": {

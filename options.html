@@ -69,6 +69,46 @@
         <div id="actionStatus" class="status"></div>
       </section>
       
+      <section class="settings-section">
+        <h2>AI Tab Organization Settings</h2>
+        <p class="section-description">Configure API keys for AI-powered tab organization. Your API keys are stored locally and never shared.</p>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label" for="openaiKey">OpenAI API Key</label>
+            <p class="setting-description">
+              Enter your OpenAI API key to use GPT models for tab organization. Leave empty to disable.
+              <br><strong>Get your key:</strong> <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
+            </p>
+          </div>
+          <input type="password" id="openaiKey" class="api-key-input" placeholder="sk-...">
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label" for="claudeKey">Claude API Key</label>
+            <p class="setting-description">
+              Enter your Anthropic Claude API key to use Claude models for tab organization. Leave empty to disable.
+              <br><strong>Get your key:</strong> <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a>
+            </p>
+          </div>
+          <input type="password" id="claudeKey" class="api-key-input" placeholder="sk-ant-...">
+        </div>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label class="setting-label" for="aiProvider">Preferred AI Provider</label>
+            <p class="setting-description">
+              Choose which AI provider to use for tab organization. The selected provider must have a valid API key configured.
+            </p>
+          </div>
+          <select id="aiProvider" class="provider-select">
+            <option value="openai">OpenAI (GPT-4o-mini)</option>
+            <option value="claude">Claude (Claude Haiku)</option>
+          </select>
+        </div>
+      </section>
+      
       <section class="info-section">
         <h2>How to Use</h2>
         <div class="info-content">
@@ -80,6 +120,7 @@
             <li>Close all other duplicates</li>
           </ul>
           <p>The extension icon badge shows how many duplicate tabs are currently open.</p>
+          <p><strong>AI Tab Organization:</strong> Use the "Organize Tabs" button in the popup to automatically group your tabs using AI. Configure your API keys above to enable this feature.</p>
         </div>
       </section>
     </div>

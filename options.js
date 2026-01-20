@@ -7,12 +7,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const testBtn = document.getElementById('testBtn');
   const reloadAllBtn = document.getElementById('reloadAllBtn');
   const actionStatus = document.getElementById('actionStatus');
+  const openaiKeyInput = document.getElementById('openaiKey');
+  const claudeKeyInput = document.getElementById('claudeKey');
+  const aiProviderSelect = document.getElementById('aiProvider');
 
   // Load saved settings
-  const settings = await chrome.storage.local.get(['ignoreQuery', 'ignoreHash', 'reloadTabs']);
+  const settings = await chrome.storage.local.get(['ignoreQuery', 'ignoreHash', 'reloadTabs', 'openaiKey', 'claudeKey', 'aiProvider']);
   ignoreQueryCheckbox.checked = settings.ignoreQuery !== false; // default to true
   ignoreHashCheckbox.checked = settings.ignoreHash !== false; // default to true
   reloadTabsCheckbox.checked = settings.reloadTabs === true;
+  
+  // Load AI settings
+  if (settings.openaiKey) {
+    openaiKeyInput.value = settings.openaiKey;
+  }
+  if (settings.claudeKey) {
+    claudeKeyInput.value = settings.claudeKey;
+  }
+  aiProviderSelect.value = settings.aiProvider || 'openai';
 
   // Save settings when changed
   ignoreQueryCheckbox.addEventListener('change', () => {
@@ -27,6 +39,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   reloadTabsCheckbox.addEventListener('change', () => {
     chrome.storage.local.set({ reloadTabs: reloadTabsCheckbox.checked });
+  });
+  
+  // Save AI settings
+  openaiKeyInput.addEventListener('input', () => {
+    chrome.storage.local.set({ openaiKey: openaiKeyInput.value.trim() });
+  });
+  
+  claudeKeyInput.addEventListener('input', () => {
+    chrome.storage.local.set({ claudeKey: claudeKeyInput.value.trim() });
+  });
+  
+  aiProviderSelect.addEventListener('change', () => {
+    chrome.storage.local.set({ aiProvider: aiProviderSelect.value });
   });
 
   // Test duplicate detection

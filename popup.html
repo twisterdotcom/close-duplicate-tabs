@@ -41,6 +41,27 @@
       <button id="reloadAllBtn" class="btn btn-secondary">Reload All Tabs</button>
     </div>
     
+    <div class="divider"></div>
+    
+    <div class="ai-section">
+      <h2>AI Tab Organization</h2>
+      <div class="setting-item">
+        <label class="switch">
+          <input type="checkbox" id="preserveGroups" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="label-text">Preserve existing groups</span>
+      </div>
+      <div class="custom-instructions">
+        <label for="customInstructions" class="instructions-label">Custom instructions (optional):</label>
+        <textarea id="customInstructions" placeholder="e.g., 'group by domain' or 'group by topic'" rows="2"></textarea>
+      </div>
+      <div class="buttons">
+        <button id="organizeTabsBtn" class="btn btn-primary">Organize Tabs</button>
+        <button id="ungroupTabsBtn" class="btn btn-secondary">Ungroup All Tabs</button>
+      </div>
+    </div>
+    
     <div id="status" class="status"></div>
   </div>
   <script src="popup.js"></script>

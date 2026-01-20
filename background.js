@@ -404,6 +404,279 @@ async function reloadAllTabs() {
   }
 }
 
+// Call OpenAI API to categorize tabs
+async function callOpenAI(apiKey, tabs, customInstructions) {
+  const tabList = tabs.map((tab, index) => {
+    const title = tab.title || 'Untitled';
+    const url = tab.url || '';
+    return `${index + 1}. "${title}" - ${url}`;
+  }).join('\n');
+
+  const basePrompt = `You are a helpful assistant that organizes browser tabs into logical groups. Analyze the following tabs and group them into categories. Return ONLY a JSON array where each object has:
+- "groupName": a short descriptive name for the group (max 20 characters)
+- "tabIndices": an array of 1-based indices of tabs that belong to this group
+
+Tabs:
+${tabList}
+
+${customInstructions ? `\nAdditional instructions: ${customInstructions}\n` : ''}
+
+Return ONLY valid JSON, no other text. Example format:
+[{"groupName": "Work", "tabIndices": [1, 3, 5]}, {"groupName": "Social", "tabIndices": [2, 4]}]`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'user',
+          content: basePrompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+    throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0]?.message?.content?.trim();
+  
+  if (!content) {
+    throw new Error('No response from OpenAI');
+  }
+
+  // Extract JSON from response (in case there's extra text)
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new Error('Invalid response format from OpenAI');
+  }
+
+  return JSON.parse(jsonMatch[0]);
+}
+
+// Call Claude API to categorize tabs
+async function callClaude(apiKey, tabs, customInstructions) {
+  const tabList = tabs.map((tab, index) => {
+    const title = tab.title || 'Untitled';
+    const url = tab.url || '';
+    return `${index + 1}. "${title}" - ${url}`;
+  }).join('\n');
+
+  const basePrompt = `You are a helpful assistant that organizes browser tabs into logical groups. Analyze the following tabs and group them into categories. Return ONLY a JSON array where each object has:
+- "groupName": a short descriptive name for the group (max 20 characters)
+- "tabIndices": an array of 1-based indices of tabs that belong to this group
+
+Tabs:
+${tabList}
+
+${customInstructions ? `\nAdditional instructions: ${customInstructions}\n` : ''}
+
+Return ONLY valid JSON, no other text. Example format:
+[{"groupName": "Work", "tabIndices": [1, 3, 5]}, {"groupName": "Social", "tabIndices": [2, 4]}]`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 2000,
+      messages: [
+        {
+          role: 'user',
+          content: basePrompt
+        }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+    throw new Error(error.error?.message || `Claude API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.content[0]?.text?.trim();
+  
+  if (!content) {
+    throw new Error('No response from Claude');
+  }
+
+  // Extract JSON from response (in case there's extra text)
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new Error('Invalid response format from Claude');
+  }
+
+  return JSON.parse(jsonMatch[0]);
+}
+
+// Organize tabs using AI
+async function organizeTabs(preserveGroups, customInstructions) {
+  try {
+    // Get AI settings
+    const settings = await chrome.storage.local.get(['openaiKey', 'claudeKey', 'aiProvider']);
+    const provider = settings.aiProvider || 'openai';
+    const openaiKey = settings.openaiKey?.trim();
+    const claudeKey = settings.claudeKey?.trim();
+
+    // Validate API key
+    if (provider === 'openai' && !openaiKey) {
+      throw new Error('OpenAI API key not configured. Please set it in the options page.');
+    }
+    if (provider === 'claude' && !claudeKey) {
+      throw new Error('Claude API key not configured. Please set it in the options page.');
+    }
+
+    // Get all tabs in current window
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    
+    // Filter out extension pages and invalid URLs
+    const validTabs = tabs.filter(tab => {
+      const url = tab.url || '';
+      return !url.startsWith('chrome://') && 
+             !url.startsWith('chrome-extension://') &&
+             !url.startsWith('edge://') &&
+             !url.startsWith('about:') &&
+             url.startsWith('http');
+    });
+
+    if (validTabs.length === 0) {
+      return {
+        success: false,
+        error: 'No valid tabs to organize'
+      };
+    }
+
+    // Get existing groups if preserving them
+    let existingGroupIds = new Set();
+    if (preserveGroups) {
+      const groups = await chrome.tabGroups.query({ windowId: tabs[0].windowId });
+      groups.forEach(group => {
+        existingGroupIds.add(group.id);
+      });
+    }
+
+    // Call AI API
+    let groups;
+    if (provider === 'openai') {
+      groups = await callOpenAI(openaiKey, validTabs, customInstructions);
+    } else {
+      groups = await callClaude(claudeKey, validTabs, customInstructions);
+    }
+
+    if (!Array.isArray(groups) || groups.length === 0) {
+      throw new Error('Invalid response from AI: expected array of groups');
+    }
+
+    // Create tab groups
+    let groupedCount = 0;
+    let groupCount = 0;
+    const usedTabIndices = new Set();
+
+    for (const group of groups) {
+      if (!group.groupName || !Array.isArray(group.tabIndices) || group.tabIndices.length === 0) {
+        continue;
+      }
+
+      // Convert 1-based indices to tab IDs
+      const tabIds = group.tabIndices
+        .map(idx => {
+          const tabIndex = idx - 1; // Convert to 0-based
+          if (tabIndex >= 0 && tabIndex < validTabs.length) {
+            return validTabs[tabIndex].id;
+          }
+          return null;
+        })
+        .filter(id => id !== null && !usedTabIndices.has(id));
+
+      if (tabIds.length === 0) {
+        continue;
+      }
+
+      // Mark tabs as used
+      tabIds.forEach(id => usedTabIndices.add(id));
+
+      // Create group
+      const groupId = await chrome.tabs.group({ tabIds });
+      
+      // Set group title and color
+      const colors = ['blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange', 'grey'];
+      const color = colors[groupCount % colors.length];
+      
+      await chrome.tabGroups.update(groupId, {
+        title: group.groupName.substring(0, 20),
+        color: color
+      });
+
+      groupedCount += tabIds.length;
+      groupCount++;
+    }
+
+    return {
+      success: true,
+      groupedCount,
+      groupCount
+    };
+  } catch (error) {
+    console.error('Error organizing tabs:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+// Ungroup all tabs
+async function ungroupTabs() {
+  try {
+    const tabs = await chrome.tabs.query({ currentWindow: true });
+    if (tabs.length === 0) {
+      return {
+        success: false,
+        error: 'No tabs found'
+      };
+    }
+
+    // Get all groups in current window
+    const groups = await chrome.tabGroups.query({ windowId: tabs[0].windowId });
+    
+    // Ungroup all tabs
+    let ungroupedCount = 0;
+    for (const group of groups) {
+      const groupTabs = await chrome.tabs.query({ groupId: group.id });
+      if (groupTabs.length > 0) {
+        await chrome.tabs.ungroup(groupTabs.map(t => t.id));
+        ungroupedCount += groupTabs.length;
+      }
+    }
+
+    return {
+      success: true,
+      ungroupedCount
+    };
+  } catch (error) {
+    console.error('Error ungrouping tabs:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
 // Handle messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'closeDuplicates') {
@@ -428,6 +701,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getDuplicateCount') {
     countDuplicates()
       .then(count => sendResponse({ success: true, count }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep the message channel open for async response
+  }
+  
+  if (request.action === 'organizeTabs') {
+    organizeTabs(request.preserveGroups, request.customInstructions)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Keep the message channel open for async response
+  }
+  
+  if (request.action === 'ungroupTabs') {
+    ungroupTabs()
+      .then(result => sendResponse(result))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Keep the message channel open for async response
   }
